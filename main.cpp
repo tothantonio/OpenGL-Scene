@@ -53,6 +53,8 @@ GLboolean pressedKeys[1024];
 
 // models
 gps::Model3D teapot;
+gps::Model3D ground;
+
 GLfloat angle;
 
 // shaders
@@ -227,6 +229,7 @@ void initOpenGLState() {
 
 void initModels() {
     teapot.LoadModel("models/teapot/teapot20segUT.obj");
+    ground.LoadModel("models/ground/ground.obj");
 }
 
 void initShaders() {
@@ -277,24 +280,44 @@ void renderTeapot(gps::Shader shader) {
     // select active shader program
     shader.useShaderProgram();
 
-    //send teapot model matrix data to shader
-    glUniformMatrix4fv(modelLoc, 1, GL_FALSE, glm::value_ptr(model));
+    // 1. Define the Teapot's Model Matrix (uses the global 'angle' for rotation)
+    model = glm::rotate(glm::mat4(1.0f), glm::radians(angle), glm::vec3(0.0f, 1.0f, 0.0f));
 
-    //send teapot normal matrix data to shader
+    // 2. Compute Normal Matrix
+    normalMatrix = glm::mat3(glm::inverseTranspose(view * model));
+
+    // 3. Send uniforms to the shader
+    glUniformMatrix4fv(modelLoc, 1, GL_FALSE, glm::value_ptr(model));
     glUniformMatrix3fv(normalMatrixLoc, 1, GL_FALSE, glm::value_ptr(normalMatrix));
 
     // draw teapot
     teapot.Draw(shader);
 }
 
+void renderGround(gps::Shader shader) {
+    shader.useShaderProgram();
+
+    // 1. Define the Ground's Model Matrix (e.g., place it below the teapot)
+    // Assuming the ground model is centered at (0, 0, 0) and needs to be lowered.
+    model = glm::translate(glm::mat4(1.0f), glm::vec3(0.0f, -1.0f, 0.0f));
+
+    // 2. Compute Normal Matrix
+    // The Normal Matrix depends on the current view and model matrices.
+    normalMatrix = glm::mat3(glm::inverseTranspose(view * model));
+
+    // 3. Send uniforms to the shader
+    glUniformMatrix4fv(modelLoc, 1, GL_FALSE, glm::value_ptr(model));
+    glUniformMatrix3fv(normalMatrixLoc, 1, GL_FALSE, glm::value_ptr(normalMatrix));
+
+    // 4. Draw the ground
+    ground.Draw(shader);
+}
+
 void renderScene() {
-	glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
+    glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 
-	//render the scene
-
-	// render the teapot
-	renderTeapot(myBasicShader);
-
+    renderTeapot(myBasicShader);
+    renderGround(myBasicShader);
 }
 
 void cleanup() {
