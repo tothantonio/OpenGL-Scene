@@ -154,6 +154,7 @@
   <ItemGroup>
     <Image Include="models\teapot\bricks2.jpg" />
     <Image Include="models\teapot\bricks2_spec.jpg" />
+    <Image Include="models\tree\tree.jpg" />
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
   <ImportGroup Label="ExtensionTargets">

@@ -149,6 +149,9 @@ void mouseCallback(GLFWwindow* window, double xpos, double ypos) {
 }
 
 void processMovement() {
+
+    const GLfloat MIN_CAMERA_HEIGHT = 0.0f;
+
 	if (pressedKeys[GLFW_KEY_W]) {
 		myCamera.move(gps::MOVE_FORWARD, cameraSpeed);
 		//update view matrix
@@ -203,6 +206,24 @@ void processMovement() {
         model = glm::rotate(glm::mat4(1.0f), glm::radians(angle), glm::vec3(0, 1, 0));
         // update normal matrix for teapot
         normalMatrix = glm::mat3(glm::inverseTranspose(view*model));
+    }
+
+    glm::vec3 currentPosition = myCamera.getPosition();
+
+    // 2. Verificam daca am cazut sub nivelul permis
+    if (currentPosition.y < MIN_CAMERA_HEIGHT) {
+        // 3. Fortam pozitia Y sa fie exact la nivelul minim
+        myCamera.setPosition(glm::vec3(currentPosition.x, MIN_CAMERA_HEIGHT, currentPosition.z));
+
+        // 4. Daca am modificat pozitia camerei, trebuie sa actualizam matricile View si Normal
+
+        view = myCamera.getViewMatrix();
+        myBasicShader.useShaderProgram();
+        glUniformMatrix4fv(viewLoc, 1, GL_FALSE, glm::value_ptr(view));
+
+        // Re-calculeaza Normal Matrix folosind noul View Matrix
+        normalMatrix = glm::mat3(glm::inverseTranspose(view * model));
+        glUniformMatrix3fv(normalMatrixLoc, 1, GL_FALSE, glm::value_ptr(normalMatrix));
     }
 }
 
@@ -277,16 +298,17 @@ void initUniforms() {
 }
 
 void renderTeapot(gps::Shader shader) {
-    // select active shader program
     shader.useShaderProgram();
+    glm::mat4 scaleMatrix = glm::mat4(1.0f);
+    float scaleFactor = 0.25f; 
+    scaleMatrix = glm::scale(scaleMatrix, glm::vec3(scaleFactor, scaleFactor, scaleFactor));
 
-    // 1. Define the Teapot's Model Matrix (uses the global 'angle' for rotation)
-    model = glm::rotate(glm::mat4(1.0f), glm::radians(angle), glm::vec3(0.0f, 1.0f, 0.0f));
+    glm::mat4 rotationMatrix = glm::rotate(glm::mat4(1.0f), glm::radians(angle), glm::vec3(0.0f, 1.0f, 0.0f));
 
-    // 2. Compute Normal Matrix
+    model = rotationMatrix * scaleMatrix;
+
     normalMatrix = glm::mat3(glm::inverseTranspose(view * model));
 
-    // 3. Send uniforms to the shader
     glUniformMatrix4fv(modelLoc, 1, GL_FALSE, glm::value_ptr(model));
     glUniformMatrix3fv(normalMatrixLoc, 1, GL_FALSE, glm::value_ptr(normalMatrix));
 
@@ -297,7 +319,6 @@ void renderTeapot(gps::Shader shader) {
 void renderGround(gps::Shader shader) {
     shader.useShaderProgram();
 
-    // 1. Define the Ground's Model Matrix (e.g., place it below the teapot)
     // Assuming the ground model is centered at (0, 0, 0) and needs to be lowered.
     model = glm::translate(glm::mat4(1.0f), glm::vec3(0.0f, -1.0f, 0.0f));
 
@@ -312,6 +333,7 @@ void renderGround(gps::Shader shader) {
     // 4. Draw the ground
     ground.Draw(shader);
 }
+
 
 void renderScene() {
     glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);

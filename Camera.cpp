@@ -65,4 +65,13 @@ namespace gps {
         cameraTarget = cameraPosition + cameraFrontDirection;
     }
 
+    glm::vec3 Camera::getPosition() const {
+        return this->cameraPosition;
+    }
+
+    void Camera::setPosition(glm::vec3 newPosition) {
+        this->cameraPosition = newPosition;
+        this->cameraTarget = this->cameraPosition + this->cameraFrontDirection;
+    }
+
 }
