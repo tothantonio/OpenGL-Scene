@@ -74,8 +74,5 @@
     <Image Include="models\teapot\bricks2_spec.jpg">
       <Filter>Resource Files</Filter>
     </Image>
-    <Image Include="models\tree\tree.jpg">
-      <Filter>Resource Files</Filter>
-    </Image>
   </ItemGroup>
 </Project>
