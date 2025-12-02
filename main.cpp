@@ -56,6 +56,12 @@
     gps::Model3D teapot;
     gps::Model3D ground;
     gps::Model3D watchTower;
+	gps::Model3D house;
+    gps::Model3D trees;
+	gps::Model3D fence;
+    gps::Model3D big_tree;
+    gps::Model3D big_tree2;
+    gps::Model3D big_tree3;
 
     GLfloat angle;
 
@@ -254,6 +260,12 @@
         teapot.LoadModel("models/teapot/teapot20segUT.obj");
         ground.LoadModel("models/ground/ground.obj");
 	    watchTower.LoadModel("models/watch_tower/watch_tower.obj");
+		house.LoadModel("models/house/house.obj");
+		trees.LoadModel("models/trees/trees.obj");
+		fence.LoadModel("models/fence/gard.obj");  
+		big_tree.LoadModel("models/big_tree/big_tree.obj");
+		big_tree2.LoadModel("models/big_tree2/big_tree2.obj");
+		big_tree3.LoadModel("models/big_tree3/big_tree3.obj");
     }
 
     void initShaders() {
@@ -342,13 +354,72 @@
 
         model = glm::translate(glm::mat4(1.0f), glm::vec3(2.0f, -1.0f, -3.0f));
 
-        model = glm::scale(model, glm::vec3(0.5f, 0.5f, 0.5f));
+        model = glm::scale(model, glm::vec3(1.0f, 1.0f, 1.0f));
         normalMatrix = glm::mat3(glm::inverseTranspose(view * model));
         glUniformMatrix4fv(modelLoc, 1, GL_FALSE, glm::value_ptr(model));
         glUniformMatrix3fv(normalMatrixLoc, 1, GL_FALSE, glm::value_ptr(normalMatrix));
         watchTower.Draw(shader);
     }
 
+    void renderHouse(gps::Shader shader) {
+        shader.useShaderProgram();
+        model = glm::translate(glm::mat4(1.0f), glm::vec3(-1.0f, -0.8f, -1.0f));
+        model = glm::scale(model, glm::vec3(1.0f, 1.0f, 1.0f));
+        normalMatrix = glm::mat3(glm::inverseTranspose(view * model));
+        glUniformMatrix4fv(modelLoc, 1, GL_FALSE, glm::value_ptr(model));
+        glUniformMatrix3fv(normalMatrixLoc, 1, GL_FALSE, glm::value_ptr(normalMatrix));
+		house.Draw(shader);
+    }
+
+    void renderFence(gps::Shader shader) {
+        shader.useShaderProgram();
+        model = glm::translate(glm::mat4(1.0f), glm::vec3(0.0f, -1.0f, 0.0f));
+        model = glm::scale(model, glm::vec3(1.0f, 1.0f, 1.0f));
+        normalMatrix = glm::mat3(glm::inverseTranspose(view * model));
+        glUniformMatrix4fv(modelLoc, 1, GL_FALSE, glm::value_ptr(model));
+		glUniformMatrix3fv(normalMatrixLoc, 1, GL_FALSE, glm::value_ptr(normalMatrix));
+        fence.Draw(shader);
+	}
+
+    void renderTrees(gps::Shader shader) {
+        shader.useShaderProgram();
+        model = glm::translate(glm::mat4(1.0f), glm::vec3(-2.0f, -1.0f, -2.0f));
+        model = glm::scale(model, glm::vec3(1.0f, 1.0f, 1.0f));
+        normalMatrix = glm::mat3(glm::inverseTranspose(view * model));
+        glUniformMatrix4fv(modelLoc, 1, GL_FALSE, glm::value_ptr(model));
+        glUniformMatrix3fv(normalMatrixLoc, 1, GL_FALSE, glm::value_ptr(normalMatrix));
+        trees.Draw(shader);
+	}
+
+    void renderBigTree(gps::Shader shader) {
+        shader.useShaderProgram();
+        model = glm::translate(glm::mat4(1.0f), glm::vec3(3.0f, -1.0f, -4.0f));
+        model = glm::scale(model, glm::vec3(1.0f, 1.0f, 1.0f));
+        normalMatrix = glm::mat3(glm::inverseTranspose(view * model));
+        glUniformMatrix4fv(modelLoc, 1, GL_FALSE, glm::value_ptr(model));
+        glUniformMatrix3fv(normalMatrixLoc, 1, GL_FALSE, glm::value_ptr(normalMatrix));
+		big_tree.Draw(shader);
+	}
+
+    void renderBigTree2(gps::Shader shader) {
+        shader.useShaderProgram();
+        model = glm::translate(glm::mat4(1.0f), glm::vec3(-3.0f, -1.0f, -4.0f));
+        model = glm::scale(model, glm::vec3(1.0f, 1.0f, 1.0f));
+        normalMatrix = glm::mat3(glm::inverseTranspose(view * model));
+        glUniformMatrix4fv(modelLoc, 1, GL_FALSE, glm::value_ptr(model));
+		glUniformMatrix3fv(normalMatrixLoc, 1, GL_FALSE, glm::value_ptr(normalMatrix));
+		big_tree2.Draw(shader);
+	}
+
+    void renderBigTree3(gps::Shader shader) {
+        shader.useShaderProgram();
+        model = glm::translate(glm::mat4(1.0f), glm::vec3(0.0f, -1.0f, -5.0f));
+        model = glm::scale(model, glm::vec3(1.0f, 1.0f, 1.0f));
+        normalMatrix = glm::mat3(glm::inverseTranspose(view * model));
+		glUniformMatrix4fv(modelLoc, 1, GL_FALSE, glm::value_ptr(model));
+		glUniformMatrix3fv(normalMatrixLoc, 1, GL_FALSE, glm::value_ptr(normalMatrix));
+		big_tree3.Draw(shader);
+	}
 
     void renderScene() {
         glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
@@ -356,6 +427,12 @@
         renderTeapot(myBasicShader);
         renderGround(myBasicShader);
 	    renderWatchTower(myBasicShader);
+		renderHouse(myBasicShader);
+		renderTrees(myBasicShader);
+		renderFence(myBasicShader);
+		renderBigTree(myBasicShader);
+		renderBigTree2(myBasicShader);
+		renderBigTree3(myBasicShader);
     }
 
     void cleanup() {
