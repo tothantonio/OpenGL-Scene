@@ -3,57 +3,96 @@
 in vec3 fPosition;
 in vec3 fNormal;
 in vec2 fTexCoords;
+in vec4 fragPosLightSpace;
 
 out vec4 fColor;
 
-//matrices
-uniform mat4 model;
-uniform mat4 view;
-uniform mat3 normalMatrix;
-//lighting
+// lighting
 uniform vec3 lightDir;
 uniform vec3 lightColor;
+
 // textures
 uniform sampler2D diffuseTexture;
 uniform sampler2D specularTexture;
+uniform sampler2D shadowMap;
 
-//components
+// material
+float ambientStrength = 0.2;
+float specularStrength = 0.5;
+float shininess = 32.0;
+
 vec3 ambient;
-float ambientStrength = 0.2f;
 vec3 diffuse;
 vec3 specular;
-float specularStrength = 0.5f;
+
+uniform bool enableFog;
 
 void computeDirLight()
 {
-    //compute eye space coordinates
-    vec4 fPosEye = view * model * vec4(fPosition, 1.0f);
-    vec3 normalEye = normalize(normalMatrix * fNormal);
+    vec3 normalEye = normalize(fNormal);
+    vec3 lightDirN = normalize(lightDir);
 
-    //normalize light direction
-    vec3 lightDirN = vec3(normalize(view * vec4(lightDir, 0.0f)));
+    vec3 viewDir = normalize(-fPosition);
 
-    //compute view direction (in eye coordinates, the viewer is situated at the origin
-    vec3 viewDir = normalize(- fPosEye.xyz);
-
-    //compute ambient light
+    // ambient
     ambient = ambientStrength * lightColor;
 
-    //compute diffuse light
-    diffuse = max(dot(normalEye, lightDirN), 0.0f) * lightColor;
+    // diffuse
+    float diff = max(dot(normalEye, lightDirN), 0.0);
+    diffuse = diff * lightColor;
 
-    //compute specular light
+    // specular
     vec3 reflectDir = reflect(-lightDirN, normalEye);
-    float specCoeff = pow(max(dot(viewDir, reflectDir), 0.0f), 32);
+    float specCoeff = pow(max(dot(viewDir, reflectDir), 0.0), shininess);
     specular = specularStrength * specCoeff * lightColor;
 }
 
-void main() 
+float computeFog()
+{
+    float fogDensity = 0.05;
+    float dist = length(fPosition);
+    float fogFactor = exp(-pow(dist * fogDensity, 2.0));
+    return clamp(fogFactor, 0.0, 1.0);
+}
+
+float computeShadow()
+{
+    vec3 normalizedCoords = fragPosLightSpace.xyz / fragPosLightSpace.w;
+
+    normalizedCoords = normalizedCoords * 0.5 + 0.5;
+
+    if (normalizedCoords.z > 1.0)
+        return 0.0;
+
+    float closestDepth = texture(shadowMap, normalizedCoords.xy).r;
+
+    float currentDepth = normalizedCoords.z;
+
+    vec3 normal = normalize(fNormal);
+    vec3 lightDirN = normalize(lightDir);
+    float bias = max(0.05 * (1.0 - dot(normal, lightDirN)), 0.005); 
+    float shadow = currentDepth - bias > closestDepth ? 1.0 : 0.0;
+
+    return shadow;
+}
+
+void main()
 {
     computeDirLight();
 
-    //compute final vertex color
-    vec3 color = min((ambient + diffuse) * texture(diffuseTexture, fTexCoords).rgb + specular * texture(specularTexture, fTexCoords).rgb, 1.0f);
+    float shadow = computeShadow();
 
-    fColor = vec4(color, 1.0f);
+    vec3 texDiffuse  = texture(diffuseTexture, fTexCoords).rgb;
+    vec3 texSpecular = texture(specularTexture, fTexCoords).rgb;
+
+    vec3 color = (ambient + (1.0 - shadow) * diffuse) * texDiffuse + 
+                 (1.0 - shadow) * specular * texSpecular;
+
+    if (enableFog) {
+        float fogFactor = computeFog();
+        vec4 fogColor = vec4(0.5, 0.5, 0.5, 1.0);
+        fColor = mix(fogColor, vec4(color, 1.0), fogFactor);
+    } else {
+        fColor = vec4(color, 1.0);
+    }
 }

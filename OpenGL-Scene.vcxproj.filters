@@ -39,6 +39,9 @@
     <ClCompile Include="Window.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
+    <ClCompile Include="SkyBox.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="Camera.hpp">
@@ -62,10 +65,17 @@
     <ClInclude Include="Window.h">
       <Filter>Header Files</Filter>
     </ClInclude>
+    <ClInclude Include="SkyBox.hpp">
+      <Filter>Header Files</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <None Include="shaders\basic.frag" />
     <None Include="shaders\basic.vert" />
+    <None Include="shaders\skyboxShader.frag" />
+    <None Include="shaders\skyboxShader.vert" />
+    <None Include="shaders\depthMap.frag" />
+    <None Include="shaders\depthMap.vert" />
   </ItemGroup>
   <ItemGroup>
     <Image Include="models\teapot\bricks2.jpg">
@@ -74,5 +84,11 @@
     <Image Include="models\teapot\bricks2_spec.jpg">
       <Filter>Resource Files</Filter>
     </Image>
+    <Image Include="skybox\back.tga" />
+    <Image Include="skybox\bottom.tga" />
+    <Image Include="skybox\front.tga" />
+    <Image Include="skybox\left.tga" />
+    <Image Include="skybox\right.tga" />
+    <Image Include="skybox\top.tga" />
   </ItemGroup>
 </Project>

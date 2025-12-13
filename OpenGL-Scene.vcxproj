@@ -134,6 +134,7 @@
     <ClCompile Include="Mesh.cpp" />
     <ClCompile Include="Model3D.cpp" />
     <ClCompile Include="Shader.cpp" />
+    <ClCompile Include="SkyBox.cpp" />
     <ClCompile Include="stb_image.cpp" />
     <ClCompile Include="tiny_obj_loader.cpp" />
     <ClCompile Include="Window.cpp" />
@@ -143,6 +144,7 @@
     <ClInclude Include="Mesh.hpp" />
     <ClInclude Include="Model3D.hpp" />
     <ClInclude Include="Shader.hpp" />
+    <ClInclude Include="SkyBox.hpp" />
     <ClInclude Include="stb_image.h" />
     <ClInclude Include="tiny_obj_loader.h" />
     <ClInclude Include="Window.h" />
@@ -150,10 +152,20 @@
   <ItemGroup>
     <None Include="shaders\basic.frag" />
     <None Include="shaders\basic.vert" />
+    <None Include="shaders\depthMap.frag" />
+    <None Include="shaders\depthMap.vert" />
+    <None Include="shaders\skyboxShader.frag" />
+    <None Include="shaders\skyboxShader.vert" />
   </ItemGroup>
   <ItemGroup>
     <Image Include="models\teapot\bricks2.jpg" />
     <Image Include="models\teapot\bricks2_spec.jpg" />
+    <Image Include="skybox\back.tga" />
+    <Image Include="skybox\bottom.tga" />
+    <Image Include="skybox\front.tga" />
+    <Image Include="skybox\left.tga" />
+    <Image Include="skybox\right.tga" />
+    <Image Include="skybox\top.tga" />
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
   <ImportGroup Label="ExtensionTargets">
