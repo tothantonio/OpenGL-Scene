@@ -1,8 +1,8 @@
 ﻿  main.cpp
-D:\toth\OpenGL-Scene\OpenGL-Scene\main.cpp(180,17): warning C4244: '=': conversion from 'double' to 'GLfloat', possible loss of data
-D:\toth\OpenGL-Scene\OpenGL-Scene\main.cpp(181,17): warning C4244: '=': conversion from 'double' to 'GLfloat', possible loss of data
-D:\toth\OpenGL-Scene\OpenGL-Scene\main.cpp(185,21): warning C4244: 'initializing': conversion from 'double' to 'GLfloat', possible loss of data
-D:\toth\OpenGL-Scene\OpenGL-Scene\main.cpp(186,21): warning C4244: 'initializing': conversion from 'double' to 'GLfloat', possible loss of data
-D:\toth\OpenGL-Scene\OpenGL-Scene\main.cpp(188,13): warning C4244: '=': conversion from 'double' to 'GLfloat', possible loss of data
-D:\toth\OpenGL-Scene\OpenGL-Scene\main.cpp(189,13): warning C4244: '=': conversion from 'double' to 'GLfloat', possible loss of data
+D:\toth\OpenGL-Scene\OpenGL-Scene\main.cpp(185,17): warning C4244: '=': conversion from 'double' to 'GLfloat', possible loss of data
+D:\toth\OpenGL-Scene\OpenGL-Scene\main.cpp(186,17): warning C4244: '=': conversion from 'double' to 'GLfloat', possible loss of data
+D:\toth\OpenGL-Scene\OpenGL-Scene\main.cpp(190,21): warning C4244: 'initializing': conversion from 'double' to 'GLfloat', possible loss of data
+D:\toth\OpenGL-Scene\OpenGL-Scene\main.cpp(191,21): warning C4244: 'initializing': conversion from 'double' to 'GLfloat', possible loss of data
+D:\toth\OpenGL-Scene\OpenGL-Scene\main.cpp(193,13): warning C4244: '=': conversion from 'double' to 'GLfloat', possible loss of data
+D:\toth\OpenGL-Scene\OpenGL-Scene\main.cpp(194,13): warning C4244: '=': conversion from 'double' to 'GLfloat', possible loss of data
   OpenGL-Scene.vcxproj -> D:\toth\OpenGL-Scene\x64\Debug\OpenGL-Scene.exe

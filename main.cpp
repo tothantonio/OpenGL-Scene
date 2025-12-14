@@ -52,7 +52,7 @@ gps::Camera myCamera(
     glm::vec3(0.0f, 0.0f, -10.0f),
     glm::vec3(0.0f, 1.0f, 0.0f));
 
-GLfloat cameraSpeed = 0.1f;
+GLfloat cameraSpeed = 0.5f;
 
 GLboolean pressedKeys[1024];
 
@@ -66,6 +66,11 @@ gps::Model3D fence;
 gps::Model3D big_tree;
 gps::Model3D big_tree2;
 gps::Model3D big_tree3;
+gps::Model3D lantern;
+
+gps::Model3D windmillBase;
+gps::Model3D windmillBlades;
+float bladesAngle = 0.0f;
 
 GLfloat angle;
 
@@ -97,7 +102,7 @@ GLint fogEnabledLoc;
 GLuint shadowMapFBO;
 GLuint depthMapTexture;
 gps::Shader depthMapShader;
-const unsigned int SHADOW_WIDTH = 2048, SHADOW_HEIGHT = 2048;
+const unsigned int SHADOW_WIDTH = 4096, SHADOW_HEIGHT = 4096;
 
 GLenum glCheckError_(const char* file, int line)
 {
@@ -326,9 +331,10 @@ void initFBO() {
 }
 
 glm::mat4 computeLightSpaceTrMatrix() {
-    glm::mat4 lightProjection = glm::ortho(-40.0f, 40.0f, -40.0f, 40.0f, 0.1f, 200.0f);
-    glm::vec3 lightPos = normalize(lightDir) * 50.0f; 
-    glm::mat4 lightView = glm::lookAt(lightPos, glm::vec3(0.0f), glm::vec3(0.0f, 1.0f, 0.0f));
+    glm::mat4 lightProjection = glm::ortho(-150.0f, 150.0f, -150.0f, 150.0f, 0.1f, 400.0f);
+    glm::vec3 lightPos = normalize(lightDir) * 150.0f;
+    glm::vec3 target = glm::vec3(0.0f, 0.0f, 50.0f);
+    glm::mat4 lightView = glm::lookAt(lightPos, target, glm::vec3(0.0f, 1.0f, 0.0f));
     return lightProjection * lightView;
 }
 
@@ -343,6 +349,9 @@ void initModels() {
     big_tree.LoadModel("models/big_tree/big_tree.obj");
     big_tree2.LoadModel("models/big_tree2/big_tree2.obj");
     big_tree3.LoadModel("models/big_tree3/big_tree3.obj");
+    windmillBase.LoadModel("models/windmill/windmill.obj");
+    windmillBlades.LoadModel("models/blades/blades.obj");
+	lantern.LoadModel("models/lantern/lantern.obj");
 }
 
 void initShaders() {
@@ -377,6 +386,9 @@ void initUniforms() {
     lightColor = glm::vec3(1.0f, 1.0f, 1.0f); //white light
     lightColorLoc = glGetUniformLocation(myBasicShader.shaderProgram, "lightColor");
     glUniform3fv(lightColorLoc, 1, glm::value_ptr(lightColor));
+
+    pointLightColor = glm::vec3(1.0f, 0.6f, 0.0f);
+    glUniform3fv(glGetUniformLocation(myBasicShader.shaderProgram, "pointLightColor"), 1, glm::value_ptr(pointLightColor));
 
     fogEnabledLoc = glGetUniformLocation(myBasicShader.shaderProgram, "enableFog");
     glUniform1i(fogEnabledLoc, fogEnabled);
@@ -489,6 +501,57 @@ void renderBigTree3(gps::Shader shader) {
     big_tree3.Draw(shader);
 }
 
+void renderWindmill(gps::Shader shader) {
+    shader.useShaderProgram();
+    glm::vec3 windmillPos = glm::vec3(20.0f, 20.0f, 100.0f);
+
+    glm::mat4 modelBase = glm::mat4(1.0f);
+    modelBase = glm::translate(modelBase, windmillPos);
+    modelBase = glm::scale(modelBase, glm::vec3(0.5f, 0.5f, 0.5f));
+
+    glUniformMatrix4fv(glGetUniformLocation(shader.shaderProgram, "model"), 1, GL_FALSE, glm::value_ptr(modelBase));
+
+    if (glGetUniformLocation(shader.shaderProgram, "normalMatrix") != -1) {
+        normalMatrix = glm::mat3(glm::inverseTranspose(view * modelBase));
+        glUniformMatrix3fv(glGetUniformLocation(shader.shaderProgram, "normalMatrix"), 1, GL_FALSE, glm::value_ptr(normalMatrix));
+    }
+    windmillBase.Draw(shader);
+
+    glm::mat4 modelBlades = glm::mat4(1.0f);
+
+    modelBlades = glm::translate(modelBlades, windmillPos);
+
+    float inaltimeTurn = 4.0f; 
+    modelBlades = glm::translate(modelBlades, glm::vec3(0.0f, inaltimeTurn, -2.8f));
+
+    bladesAngle += 1.0f;
+    modelBlades = glm::rotate(modelBlades, glm::radians(bladesAngle), glm::vec3(0.0f, 0.0f, 1.0f));
+
+    modelBlades = glm::scale(modelBlades, glm::vec3(0.5f, 0.5f, 0.5f));
+
+    glUniformMatrix4fv(glGetUniformLocation(shader.shaderProgram, "model"), 1, GL_FALSE, glm::value_ptr(modelBlades));
+
+    if (glGetUniformLocation(shader.shaderProgram, "normalMatrix") != -1) {
+        normalMatrix = glm::mat3(glm::inverseTranspose(view * modelBlades));
+        glUniformMatrix3fv(glGetUniformLocation(shader.shaderProgram, "normalMatrix"), 1, GL_FALSE, glm::value_ptr(normalMatrix));
+    }
+    windmillBlades.Draw(shader);
+}
+
+void renderLantern(gps::Shader shader) {
+    shader.useShaderProgram();
+    glm::vec3 lanternPos = glm::vec3(-7.0f, -0.4f, -1.0f);
+    glm::mat4 modelLantern = glm::mat4(1.0f);
+    modelLantern = glm::translate(modelLantern, lanternPos);
+    modelLantern = glm::scale(modelLantern, glm::vec3(0.5f, 0.5f, 0.5f));
+    glUniformMatrix4fv(glGetUniformLocation(shader.shaderProgram, "model"), 1, GL_FALSE, glm::value_ptr(modelLantern));
+    if (glGetUniformLocation(shader.shaderProgram, "normalMatrix") != -1) {
+        normalMatrix = glm::mat3(glm::inverseTranspose(view * modelLantern));
+        glUniformMatrix3fv(glGetUniformLocation(shader.shaderProgram, "normalMatrix"), 1, GL_FALSE, glm::value_ptr(normalMatrix));
+    }
+    lantern.Draw(shader);
+}
+
 void renderScene() {
     glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 
@@ -497,25 +560,27 @@ void renderScene() {
         1, GL_FALSE, glm::value_ptr(computeLightSpaceTrMatrix()));
 
     glViewport(0, 0, SHADOW_WIDTH, SHADOW_HEIGHT);
-    glBindFramebuffer(GL_FRAMEBUFFER, shadowMapFBO); 
-    glClear(GL_DEPTH_BUFFER_BIT); 
+    glBindFramebuffer(GL_FRAMEBUFFER, shadowMapFBO);
+    glClear(GL_DEPTH_BUFFER_BIT);
 
     glCullFace(GL_FRONT);
 
     renderTeapot(depthMapShader);
     renderGround(depthMapShader);
-	renderWatchTower(depthMapShader);
-	renderHouse(depthMapShader);
-	renderTrees(depthMapShader);
-	renderFence(depthMapShader);
-	renderBigTree(depthMapShader);
-	renderBigTree2(depthMapShader);
-	renderBigTree3(depthMapShader);
+    renderWatchTower(depthMapShader);
+    renderHouse(depthMapShader);
+    renderTrees(depthMapShader);
+    renderFence(depthMapShader);
+    renderBigTree(depthMapShader);
+    renderBigTree2(depthMapShader);
+    renderBigTree3(depthMapShader);
+    renderWindmill(depthMapShader);
+    renderLantern(depthMapShader);
 
     glCullFace(GL_BACK);
-    glBindFramebuffer(GL_FRAMEBUFFER, 0); 
+    glBindFramebuffer(GL_FRAMEBUFFER, 0);
 
-    glViewport(0, 0, myWindow.getWindowDimensions().width, myWindow.getWindowDimensions().height); 
+    glViewport(0, 0, myWindow.getWindowDimensions().width, myWindow.getWindowDimensions().height);
     myBasicShader.useShaderProgram();
 
     glUniformMatrix4fv(glGetUniformLocation(myBasicShader.shaderProgram, "lightSpaceTrMatrix"),
@@ -524,6 +589,14 @@ void renderScene() {
     glActiveTexture(GL_TEXTURE3);
     glBindTexture(GL_TEXTURE_2D, depthMapTexture);
     glUniform1i(glGetUniformLocation(myBasicShader.shaderProgram, "shadowMap"), 3);
+
+    glm::vec3 lanternPos = glm::vec3(-13.0f, -0.4f, -4.0f);
+
+    glm::vec3 lightSourcePos = lanternPos + glm::vec3(0.0f, 1.0f, 0.0f); // +1.0f pe Y
+
+    glm::vec3 lightPosEye = glm::vec3(view * glm::vec4(lightSourcePos, 1.0f));
+
+    glUniform3fv(glGetUniformLocation(myBasicShader.shaderProgram, "pointLightPos"), 1, glm::value_ptr(lightPosEye));
 
     renderTeapot(myBasicShader);
     renderGround(myBasicShader);
@@ -534,9 +607,10 @@ void renderScene() {
     renderBigTree(myBasicShader);
     renderBigTree2(myBasicShader);
     renderBigTree3(myBasicShader);
+    renderWindmill(myBasicShader);
+    renderLantern(myBasicShader);
     mySkyBox.Draw(skyboxShader, view, projection);
 }
-
 void cleanup() {
     myWindow.Delete();
     //cleanup code for your own data
