@@ -1,8 +1,11 @@
 ﻿  main.cpp
-D:\toth\OpenGL-Scene\OpenGL-Scene\main.cpp(185,17): warning C4244: '=': conversion from 'double' to 'GLfloat', possible loss of data
-D:\toth\OpenGL-Scene\OpenGL-Scene\main.cpp(186,17): warning C4244: '=': conversion from 'double' to 'GLfloat', possible loss of data
-D:\toth\OpenGL-Scene\OpenGL-Scene\main.cpp(190,21): warning C4244: 'initializing': conversion from 'double' to 'GLfloat', possible loss of data
-D:\toth\OpenGL-Scene\OpenGL-Scene\main.cpp(191,21): warning C4244: 'initializing': conversion from 'double' to 'GLfloat', possible loss of data
-D:\toth\OpenGL-Scene\OpenGL-Scene\main.cpp(193,13): warning C4244: '=': conversion from 'double' to 'GLfloat', possible loss of data
-D:\toth\OpenGL-Scene\OpenGL-Scene\main.cpp(194,13): warning C4244: '=': conversion from 'double' to 'GLfloat', possible loss of data
+D:\toth\OpenGL-Scene\OpenGL-Scene\main.cpp(196,17): warning C4244: '=': conversion from 'double' to 'GLfloat', possible loss of data
+D:\toth\OpenGL-Scene\OpenGL-Scene\main.cpp(197,17): warning C4244: '=': conversion from 'double' to 'GLfloat', possible loss of data
+D:\toth\OpenGL-Scene\OpenGL-Scene\main.cpp(201,21): warning C4244: 'initializing': conversion from 'double' to 'GLfloat', possible loss of data
+D:\toth\OpenGL-Scene\OpenGL-Scene\main.cpp(202,21): warning C4244: 'initializing': conversion from 'double' to 'GLfloat', possible loss of data
+D:\toth\OpenGL-Scene\OpenGL-Scene\main.cpp(204,13): warning C4244: '=': conversion from 'double' to 'GLfloat', possible loss of data
+D:\toth\OpenGL-Scene\OpenGL-Scene\main.cpp(205,13): warning C4244: '=': conversion from 'double' to 'GLfloat', possible loss of data
+glew32s.lib(glew.obj) : warning LNK4099: PDB 'vc120.pdb' was not found with 'glew32s.lib(glew.obj)' or at 'D:\toth\OpenGL-Scene\x64\Debug\vc120.pdb'; linking object as if no debug info
+LINK : warning LNK4098: defaultlib 'MSVCRT' conflicts with use of other libs; use /NODEFAULTLIB:library
+LINK : warning LNK4098: defaultlib 'LIBCMT' conflicts with use of other libs; use /NODEFAULTLIB:library
   OpenGL-Scene.vcxproj -> D:\toth\OpenGL-Scene\x64\Debug\OpenGL-Scene.exe

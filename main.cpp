@@ -67,10 +67,14 @@ gps::Model3D big_tree;
 gps::Model3D big_tree2;
 gps::Model3D big_tree3;
 gps::Model3D lantern;
+gps::Model3D bear;
 
 gps::Model3D windmillBase;
 gps::Model3D windmillBlades;
 float bladesAngle = 0.0f;
+
+gps::Model3D well;
+gps::Model3D casuta;
 
 GLfloat angle;
 
@@ -103,6 +107,9 @@ GLuint shadowMapFBO;
 GLuint depthMapTexture;
 gps::Shader depthMapShader;
 const unsigned int SHADOW_WIDTH = 4096, SHADOW_HEIGHT = 4096;
+
+bool startTour = false;
+float tourAngle = 0.0f;
 
 GLenum glCheckError_(const char* file, int line)
 {
@@ -177,6 +184,10 @@ void keyboardCallback(GLFWwindow* window, int key, int scancode, int action, int
             std::cout << "Fog: " << (fogEnabled ? "ON" : "OFF") << std::endl;
         }
     }
+
+    if (key == GLFW_KEY_P && action == GLFW_PRESS) {
+        pressedKeys[GLFW_KEY_P] = true;
+    }
 }
 
 void mouseCallback(GLFWwindow* window, double xpos, double ypos) {
@@ -217,75 +228,94 @@ void processMovement() {
 
     const GLfloat MIN_CAMERA_HEIGHT = 0.0f;
 
-    if (pressedKeys[GLFW_KEY_W]) {
-        myCamera.move(gps::MOVE_FORWARD, cameraSpeed);
-        //update view matrix
-        view = myCamera.getViewMatrix();
+    if (pressedKeys[GLFW_KEY_P]) {
+        startTour = !startTour;
+        pressedKeys[GLFW_KEY_P] = false;
+    }
+
+    if (startTour) {
+        tourAngle += 0.5f;
+        float radius = 30.0f;
+        float camX = sin(glm::radians(tourAngle)) * radius;
+        float camZ = cos(glm::radians(tourAngle)) * radius;
+        myCamera.setPosition(glm::vec3(camX, 10.0f, camZ));
+        view = glm::lookAt(glm::vec3(camX, 10.0f, camZ), glm::vec3(0.0f, 2.0f, 0.0f), glm::vec3(0.0f, 1.0f, 0.0f));
         myBasicShader.useShaderProgram();
         glUniformMatrix4fv(viewLoc, 1, GL_FALSE, glm::value_ptr(view));
-        // compute normal matrix for teapot
         normalMatrix = glm::mat3(glm::inverseTranspose(view * model));
     }
+    else {
+        if (pressedKeys[GLFW_KEY_W]) {
+            myCamera.move(gps::MOVE_FORWARD, cameraSpeed);
+            //update view matrix
+            view = myCamera.getViewMatrix();
+            myBasicShader.useShaderProgram();
+            glUniformMatrix4fv(viewLoc, 1, GL_FALSE, glm::value_ptr(view));
+            // compute normal matrix for teapot
+            normalMatrix = glm::mat3(glm::inverseTranspose(view * model));
+        }
 
-    if (pressedKeys[GLFW_KEY_S]) {
-        myCamera.move(gps::MOVE_BACKWARD, cameraSpeed);
-        //update view matrix
-        view = myCamera.getViewMatrix();
-        myBasicShader.useShaderProgram();
-        glUniformMatrix4fv(viewLoc, 1, GL_FALSE, glm::value_ptr(view));
-        // compute normal matrix for teapot
-        normalMatrix = glm::mat3(glm::inverseTranspose(view * model));
+        if (pressedKeys[GLFW_KEY_S]) {
+            myCamera.move(gps::MOVE_BACKWARD, cameraSpeed);
+            //update view matrix
+            view = myCamera.getViewMatrix();
+            myBasicShader.useShaderProgram();
+            glUniformMatrix4fv(viewLoc, 1, GL_FALSE, glm::value_ptr(view));
+            // compute normal matrix for teapot
+            normalMatrix = glm::mat3(glm::inverseTranspose(view * model));
+        }
+
+        if (pressedKeys[GLFW_KEY_A]) {
+            myCamera.move(gps::MOVE_LEFT, cameraSpeed);
+            //update view matrix
+            view = myCamera.getViewMatrix();
+            myBasicShader.useShaderProgram();
+            glUniformMatrix4fv(viewLoc, 1, GL_FALSE, glm::value_ptr(view));
+            // compute normal matrix for teapot
+            normalMatrix = glm::mat3(glm::inverseTranspose(view * model));
+        }
+
+        if (pressedKeys[GLFW_KEY_D]) {
+            myCamera.move(gps::MOVE_RIGHT, cameraSpeed);
+            //update view matrix
+            view = myCamera.getViewMatrix();
+            myBasicShader.useShaderProgram();
+            glUniformMatrix4fv(viewLoc, 1, GL_FALSE, glm::value_ptr(view));
+            // compute normal matrix for teapot
+            normalMatrix = glm::mat3(glm::inverseTranspose(view * model));
+        }
+
+        if (pressedKeys[GLFW_KEY_Q]) {
+            angle -= 1.0f;
+            // update model matrix for teapot
+            model = glm::rotate(glm::mat4(1.0f), glm::radians(angle), glm::vec3(0, 1, 0));
+            // update normal matrix for teapot
+            normalMatrix = glm::mat3(glm::inverseTranspose(view * model));
+        }
+
+        if (pressedKeys[GLFW_KEY_E]) {
+            angle += 1.0f;
+            // update model matrix for teapot
+            model = glm::rotate(glm::mat4(1.0f), glm::radians(angle), glm::vec3(0, 1, 0));
+            // update normal matrix for teapot
+            normalMatrix = glm::mat3(glm::inverseTranspose(view * model));
+        }
+
+        glm::vec3 currentPosition = myCamera.getPosition();
+
+        if (currentPosition.y < MIN_CAMERA_HEIGHT) {
+            myCamera.setPosition(glm::vec3(currentPosition.x, MIN_CAMERA_HEIGHT, currentPosition.z));
+
+
+            view = myCamera.getViewMatrix();
+            myBasicShader.useShaderProgram();
+            glUniformMatrix4fv(viewLoc, 1, GL_FALSE, glm::value_ptr(view));
+
+            normalMatrix = glm::mat3(glm::inverseTranspose(view * model));
+            glUniformMatrix3fv(normalMatrixLoc, 1, GL_FALSE, glm::value_ptr(normalMatrix));
+        }
     }
 
-    if (pressedKeys[GLFW_KEY_A]) {
-        myCamera.move(gps::MOVE_LEFT, cameraSpeed);
-        //update view matrix
-        view = myCamera.getViewMatrix();
-        myBasicShader.useShaderProgram();
-        glUniformMatrix4fv(viewLoc, 1, GL_FALSE, glm::value_ptr(view));
-        // compute normal matrix for teapot
-        normalMatrix = glm::mat3(glm::inverseTranspose(view * model));
-    }
-
-    if (pressedKeys[GLFW_KEY_D]) {
-        myCamera.move(gps::MOVE_RIGHT, cameraSpeed);
-        //update view matrix
-        view = myCamera.getViewMatrix();
-        myBasicShader.useShaderProgram();
-        glUniformMatrix4fv(viewLoc, 1, GL_FALSE, glm::value_ptr(view));
-        // compute normal matrix for teapot
-        normalMatrix = glm::mat3(glm::inverseTranspose(view * model));
-    }
-
-    if (pressedKeys[GLFW_KEY_Q]) {
-        angle -= 1.0f;
-        // update model matrix for teapot
-        model = glm::rotate(glm::mat4(1.0f), glm::radians(angle), glm::vec3(0, 1, 0));
-        // update normal matrix for teapot
-        normalMatrix = glm::mat3(glm::inverseTranspose(view * model));
-    }
-
-    if (pressedKeys[GLFW_KEY_E]) {
-        angle += 1.0f;
-        // update model matrix for teapot
-        model = glm::rotate(glm::mat4(1.0f), glm::radians(angle), glm::vec3(0, 1, 0));
-        // update normal matrix for teapot
-        normalMatrix = glm::mat3(glm::inverseTranspose(view * model));
-    }
-
-    glm::vec3 currentPosition = myCamera.getPosition();
-
-    if (currentPosition.y < MIN_CAMERA_HEIGHT) {
-        myCamera.setPosition(glm::vec3(currentPosition.x, MIN_CAMERA_HEIGHT, currentPosition.z));
-
-
-        view = myCamera.getViewMatrix();
-        myBasicShader.useShaderProgram();
-        glUniformMatrix4fv(viewLoc, 1, GL_FALSE, glm::value_ptr(view));
-
-        normalMatrix = glm::mat3(glm::inverseTranspose(view * model));
-        glUniformMatrix3fv(normalMatrixLoc, 1, GL_FALSE, glm::value_ptr(normalMatrix));
-    }
 }
 
 void initOpenGLWindow() {
@@ -352,6 +382,9 @@ void initModels() {
     windmillBase.LoadModel("models/windmill/windmill.obj");
     windmillBlades.LoadModel("models/blades/blades.obj");
 	lantern.LoadModel("models/lantern/lantern.obj");
+    well.LoadModel("models/well/well.obj");
+	casuta.LoadModel("models/casuta/casuta.obj");
+	bear.LoadModel("models/bear/bear.obj");
 }
 
 void initShaders() {
@@ -552,6 +585,45 @@ void renderLantern(gps::Shader shader) {
     lantern.Draw(shader);
 }
 
+void renderWell(gps::Shader shader) {
+    shader.useShaderProgram();
+    glm::mat4 modelWell = glm::mat4(1.0f);
+    modelWell = glm::translate(modelWell, glm::vec3(5.0f, -1.0f, 5.0f));
+    modelWell = glm::scale(modelWell, glm::vec3(1.0f, 1.0f, 1.0f));
+    glUniformMatrix4fv(glGetUniformLocation(shader.shaderProgram, "model"), 1, GL_FALSE, glm::value_ptr(modelWell));
+    if (glGetUniformLocation(shader.shaderProgram, "normalMatrix") != -1) {
+        normalMatrix = glm::mat3(glm::inverseTranspose(view * modelWell));
+        glUniformMatrix3fv(glGetUniformLocation(shader.shaderProgram, "normalMatrix"), 1, GL_FALSE, glm::value_ptr(normalMatrix));
+    }
+    well.Draw(shader);
+}
+
+void renderCasuta(gps::Shader shader) {
+    shader.useShaderProgram();
+    glm::mat4 modelCasuta = glm::mat4(1.0f);
+    modelCasuta = glm::translate(modelCasuta, glm::vec3(-5.0f, -3.0f, 5.0f));
+    modelCasuta = glm::scale(modelCasuta, glm::vec3(1.0f, 1.0f, 1.0f));
+    glUniformMatrix4fv(glGetUniformLocation(shader.shaderProgram, "model"), 1, GL_FALSE, glm::value_ptr(modelCasuta));
+    if (glGetUniformLocation(shader.shaderProgram, "normalMatrix") != -1) {
+        normalMatrix = glm::mat3(glm::inverseTranspose(view * modelCasuta));
+        glUniformMatrix3fv(glGetUniformLocation(shader.shaderProgram, "normalMatrix"), 1, GL_FALSE, glm::value_ptr(normalMatrix));
+    }
+    casuta.Draw(shader);
+}
+
+void renderBear(gps::Shader shader) {
+    shader.useShaderProgram();
+    glm::mat4 modelBear = glm::mat4(1.0f);
+    modelBear = glm::translate(modelBear, glm::vec3(0.0f, -0.05f, -3.0f));
+    modelBear = glm::scale(modelBear, glm::vec3(0.5f, 0.5f, 0.5f));
+    glUniformMatrix4fv(glGetUniformLocation(shader.shaderProgram, "model"), 1, GL_FALSE, glm::value_ptr(modelBear));
+    if (glGetUniformLocation(shader.shaderProgram, "normalMatrix") != -1) {
+        normalMatrix = glm::mat3(glm::inverseTranspose(view * modelBear));
+        glUniformMatrix3fv(glGetUniformLocation(shader.shaderProgram, "normalMatrix"), 1, GL_FALSE, glm::value_ptr(normalMatrix));
+    }
+    bear.Draw(shader);
+}
+
 void renderScene() {
     glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 
@@ -576,6 +648,9 @@ void renderScene() {
     renderBigTree3(depthMapShader);
     renderWindmill(depthMapShader);
     renderLantern(depthMapShader);
+	renderWell(depthMapShader);
+	renderCasuta(depthMapShader);
+	renderBear(depthMapShader);
 
     glCullFace(GL_BACK);
     glBindFramebuffer(GL_FRAMEBUFFER, 0);
@@ -609,6 +684,9 @@ void renderScene() {
     renderBigTree3(myBasicShader);
     renderWindmill(myBasicShader);
     renderLantern(myBasicShader);
+	renderWell(myBasicShader);
+	renderCasuta(myBasicShader);
+	renderBear(myBasicShader);
     mySkyBox.Draw(skyboxShader, view, projection);
 }
 void cleanup() {
