@@ -1,11 +1,9 @@
 ﻿  main.cpp
-D:\toth\OpenGL-Scene\OpenGL-Scene\main.cpp(196,17): warning C4244: '=': conversion from 'double' to 'GLfloat', possible loss of data
-D:\toth\OpenGL-Scene\OpenGL-Scene\main.cpp(197,17): warning C4244: '=': conversion from 'double' to 'GLfloat', possible loss of data
-D:\toth\OpenGL-Scene\OpenGL-Scene\main.cpp(201,21): warning C4244: 'initializing': conversion from 'double' to 'GLfloat', possible loss of data
-D:\toth\OpenGL-Scene\OpenGL-Scene\main.cpp(202,21): warning C4244: 'initializing': conversion from 'double' to 'GLfloat', possible loss of data
-D:\toth\OpenGL-Scene\OpenGL-Scene\main.cpp(204,13): warning C4244: '=': conversion from 'double' to 'GLfloat', possible loss of data
-D:\toth\OpenGL-Scene\OpenGL-Scene\main.cpp(205,13): warning C4244: '=': conversion from 'double' to 'GLfloat', possible loss of data
-glew32s.lib(glew.obj) : warning LNK4099: PDB 'vc120.pdb' was not found with 'glew32s.lib(glew.obj)' or at 'D:\toth\OpenGL-Scene\x64\Debug\vc120.pdb'; linking object as if no debug info
-LINK : warning LNK4098: defaultlib 'MSVCRT' conflicts with use of other libs; use /NODEFAULTLIB:library
-LINK : warning LNK4098: defaultlib 'LIBCMT' conflicts with use of other libs; use /NODEFAULTLIB:library
+D:\toth\OpenGL-Scene\OpenGL-Scene\main.cpp(184,17): warning C4244: '=': conversion from 'double' to 'GLfloat', possible loss of data
+D:\toth\OpenGL-Scene\OpenGL-Scene\main.cpp(184,31): warning C4244: '=': conversion from 'double' to 'GLfloat', possible loss of data
+D:\toth\OpenGL-Scene\OpenGL-Scene\main.cpp(186,19): warning C4244: 'initializing': conversion from 'double' to 'float', possible loss of data
+D:\toth\OpenGL-Scene\OpenGL-Scene\main.cpp(187,19): warning C4244: 'initializing': conversion from 'double' to 'float', possible loss of data
+D:\toth\OpenGL-Scene\OpenGL-Scene\main.cpp(188,13): warning C4244: '=': conversion from 'double' to 'GLfloat', possible loss of data
+D:\toth\OpenGL-Scene\OpenGL-Scene\main.cpp(188,27): warning C4244: '=': conversion from 'double' to 'GLfloat', possible loss of data
+D:\toth\OpenGL-Scene\OpenGL-Scene\main.cpp(448,16): warning C4244: 'initializing': conversion from 'double' to 'float', possible loss of data
   OpenGL-Scene.vcxproj -> D:\toth\OpenGL-Scene\x64\Debug\OpenGL-Scene.exe
