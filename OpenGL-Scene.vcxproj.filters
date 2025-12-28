@@ -76,6 +76,8 @@
     <None Include="shaders\skyboxShader.vert" />
     <None Include="shaders\depthMap.frag" />
     <None Include="shaders\depthMap.vert" />
+    <None Include="shaders\snow.frag" />
+    <None Include="shaders\snow.vert" />
   </ItemGroup>
   <ItemGroup>
     <Image Include="models\teapot\bricks2.jpg">

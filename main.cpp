@@ -72,6 +72,7 @@ gps::Model3D well;
 gps::Model3D casuta;
 gps::Model3D campfire;
 gps::SkyBox mySkyBox;
+gps::SkyBox myNightSkyBox;
 
 // --- Animation & Interaction ---
 GLboolean pressedKeys[1024];
@@ -92,6 +93,27 @@ GLfloat sensitivity = 0.1f;
 // --- Shadow Mapping ---
 GLuint shadowMapFBO;
 GLuint depthMapTexture;
+
+struct SnowParticle {
+    glm::vec3 position;
+    glm::vec3 velocity;
+    float size;
+    float lifetime;
+};
+
+std::vector<SnowParticle> snowParticles;
+const int MAX_SNOW_PARTICLES = 50000;
+bool snowEnabled = false;
+
+GLuint snowVAO, snowVBO;
+gps::Shader snowShader;
+
+glm::vec3 lanternWorldPos = glm::vec3(-7.0f, -0.4f, -1.0f);
+glm::vec3 campfireWorldPos = glm::vec3(-7.0f, -1.1f, -5.0f);
+
+bool lanternLightEnabled = true;
+bool campfireLightEnabled = true;
+bool sunLightEnabled = true; 
 
 GLenum glCheckError_(const char* file, int line) {
     GLenum errorCode;
@@ -132,7 +154,6 @@ void drawModel(gps::Model3D& modelObj, gps::Shader& shader, glm::vec3 position, 
 
     glUniformMatrix4fv(glGetUniformLocation(shader.shaderProgram, "model"), 1, GL_FALSE, glm::value_ptr(m));
 
-    // Calculam normal matrix doar daca nu suntem in shadow pass (depth map shader nu are nevoie de normale de obicei, dar daca da, e ok)
     if (glGetUniformLocation(shader.shaderProgram, "normalMatrix") != -1) {
         glm::mat3 normMat = glm::mat3(glm::inverseTranspose(view * m));
         glUniformMatrix3fv(glGetUniformLocation(shader.shaderProgram, "normalMatrix"), 1, GL_FALSE, glm::value_ptr(normMat));
@@ -176,6 +197,24 @@ void keyboardCallback(GLFWwindow* window, int key, int scancode, int action, int
         else if (key == GLFW_KEY_P) {
             startTour = !startTour;
         }
+        else if (key == GLFW_KEY_N) {
+            snowEnabled = !snowEnabled;
+        }
+        else if (key == GLFW_KEY_L) {
+            lanternLightEnabled = !lanternLightEnabled;
+            std::cout << "Lantern Light: " << (lanternLightEnabled ? "ON" : "OFF") << std::endl;
+        }
+        else if (key == GLFW_KEY_C) {
+            campfireLightEnabled = !campfireLightEnabled;
+            std::cout << "Campfire Light: " << (campfireLightEnabled ? "ON" : "OFF") << std::endl;
+        }
+        else if (key == GLFW_KEY_K && action == GLFW_PRESS) {
+            sunLightEnabled = !sunLightEnabled;
+            myBasicShader.useShaderProgram();
+            GLint sunEnabledLoc = glGetUniformLocation(myBasicShader.shaderProgram, "sunEnabled");
+            glUniform1i(sunEnabledLoc, sunLightEnabled);
+            std::cout << "Sun Light: " << (sunLightEnabled ? "ON" : "OFF") << std::endl;
+        }
     }
 }
 
@@ -208,7 +247,7 @@ void processMovement() {
         float radius = 30.0f;
         float camX = sin(glm::radians(tourAngle)) * radius;
         float camZ = cos(glm::radians(tourAngle)) * radius;
-        myCamera.setPosition(glm::vec3(camX, 10.0f, camZ));
+        myCamera.setPosition(glm::vec3(camX, 5.0f, camZ));
         view = glm::lookAt(glm::vec3(camX, 10.0f, camZ), glm::vec3(0.0f, 2.0f, 0.0f), glm::vec3(0.0f, 1.0f, 0.0f));
     }
     else {
@@ -296,6 +335,7 @@ void initShaders() {
     myBasicShader.loadShader("shaders/basic.vert", "shaders/basic.frag");
     depthMapShader.loadShader("shaders/depthMap.vert", "shaders/depthMap.frag");
     skyboxShader.loadShader("shaders/skyboxShader.vert", "shaders/skyboxShader.frag");
+    snowShader.loadShader("shaders/snow.vert", "shaders/snow.frag");
 }
 
 void initUniforms() {
@@ -319,6 +359,9 @@ void initUniforms() {
     lightColorLoc = glGetUniformLocation(myBasicShader.shaderProgram, "lightColor");
     glUniform3fv(lightColorLoc, 1, glm::value_ptr(lightColor));
 
+    GLint sunEnabledLoc = glGetUniformLocation(myBasicShader.shaderProgram, "sunEnabled");
+    glUniform1i(sunEnabledLoc, sunLightEnabled);
+
     pointLightColor = glm::vec3(1.0f, 0.6f, 0.0f);
     glUniform3fv(glGetUniformLocation(myBasicShader.shaderProgram, "pointLightColor"), 1, glm::value_ptr(pointLightColor));
 
@@ -326,15 +369,90 @@ void initUniforms() {
     glUniform1i(fogEnabledLoc, fogEnabled);
 }
 
-void initSkybox() {
-    std::vector<const GLchar*> faces;
-    /*faces.push_back("skybox/right.tga");
-    faces.push_back("skybox/left.tga");
-    faces.push_back("skybox/top.tga");
-    faces.push_back("skybox/bottom.tga");
-    faces.push_back("skybox/back.tga");
-    faces.push_back("skybox/front.tga");*/
+void initSnowParticles() {
+    snowParticles.reserve(MAX_SNOW_PARTICLES);
 
+    for (int i = 0; i < MAX_SNOW_PARTICLES; i++) {
+        SnowParticle particle;
+        particle.position = glm::vec3(
+            (rand() % 1000 - 500) / 10.0f, 
+            (rand() % 200) / 10.0f + 0.5f,  
+            (rand() % 1000 - 500) / 10.0f  
+        );
+        particle.velocity = glm::vec3(
+            (rand() % 20 - 10) / 50.0f,    
+            -(rand() % 30 + 20) / 50.0f,
+            (rand() % 20 - 10) / 50.0f
+        );
+        particle.size = (rand() % 80 + 80) / 100.0f;
+        particle.lifetime = (rand() % 100) / 10.0f;
+        snowParticles.push_back(particle);
+    }
+
+    glGenVertexArrays(1, &snowVAO);
+    glGenBuffers(1, &snowVBO);
+}
+
+void updateSnowParticles(float deltaTime) {
+    if (!snowEnabled) return;
+
+    for (auto& particle : snowParticles) {
+        particle.position += particle.velocity * deltaTime;
+        particle.lifetime += deltaTime;
+
+        if (particle.position.y < -1.0f ||
+            abs(particle.position.x) > 100.0f ||
+            abs(particle.position.z) > 100.0f) {
+
+            particle.position = glm::vec3(
+                (rand() % 1000 - 500) / 10.0f,  
+                (rand() % 100) / 10.0f + 0.5f, 
+                (rand() % 1000 - 500) / 10.0f
+            );
+            particle.velocity.y = -(rand() % 50 + 20) / 50.0f;
+            particle.lifetime = 0.0f;
+        }
+    }
+}
+
+void renderSnow() {
+    if (!snowEnabled || snowParticles.empty()) return;
+
+    glEnable(GL_BLEND);
+    glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
+    glDepthMask(GL_FALSE); 
+
+    snowShader.useShaderProgram();
+
+    glUniformMatrix4fv(glGetUniformLocation(snowShader.shaderProgram, "view"),
+        1, GL_FALSE, glm::value_ptr(view));
+    glUniformMatrix4fv(glGetUniformLocation(snowShader.shaderProgram, "projection"),
+        1, GL_FALSE, glm::value_ptr(projection));
+
+    std::vector<glm::vec3> positions;
+    for (const auto& particle : snowParticles) {
+        positions.push_back(particle.position);
+    }
+
+    glBindVertexArray(snowVAO);
+    glBindBuffer(GL_ARRAY_BUFFER, snowVBO);
+    glBufferData(GL_ARRAY_BUFFER, positions.size() * sizeof(glm::vec3),
+        positions.data(), GL_DYNAMIC_DRAW);
+
+    glEnableVertexAttribArray(0);
+    glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, sizeof(glm::vec3), (void*)0);
+
+    glUniform1f(glGetUniformLocation(snowShader.shaderProgram, "pointSize"), 10.0f); // fulgi mai mari
+
+    glDrawArrays(GL_POINTS, 0, positions.size());
+
+    glDepthMask(GL_TRUE);
+    glDisable(GL_BLEND);
+}
+
+void initSkybox() {
+
+    std::vector<const GLchar*> faces;
     faces.push_back("skybox/posx.jpg");
     faces.push_back("skybox/negx.jpg");
     faces.push_back("skybox/posy.jpg");
@@ -342,26 +460,35 @@ void initSkybox() {
     faces.push_back("skybox/posz.jpg");
     faces.push_back("skybox/negz.jpg");
     mySkyBox.Load(faces);
+
+    std::vector<const GLchar*> darkFaces;
+	darkFaces.push_back("skybox/dark_posx.jpg");
+	darkFaces.push_back("skybox/dark_negx.jpg");
+	darkFaces.push_back("skybox/dark_posy.jpg");
+	darkFaces.push_back("skybox/dark_negy.jpg");
+	darkFaces.push_back("skybox/dark_posz.jpg");
+	darkFaces.push_back("skybox/dark_negz.jpg");
+	myNightSkyBox.Load(darkFaces);
 }
 
 void renderAllObjects(gps::Shader shader) {
 
-    // 1. Ceainic (cu rotatia din tastele Q/E)
+    // 1. Ceainic 
     drawModel(teapot, shader, glm::vec3(-5.0f, -3.0f, 5.0f), glm::vec3(0.25f), angle);
 
     // 2. Ground
     drawModel(ground, shader, glm::vec3(0.0f, -1.0f, 0.0f));
 
-    // 3. Watch Tower (2.0f, -1.0f, -3.0f)
+    // 3. Watch Tower
     drawModel(watchTower, shader, glm::vec3(2.0f, -1.0f, -3.0f));
 
-    // 4. House (-1.0f, -0.8f, -1.0f)
+    // 4. House
     drawModel(house, shader, glm::vec3(-1.0f, -0.8f, -1.0f));
 
-    // 5. Fence (0.0f, -1.0f, 0.0f)
+    // 5. Fence
     drawModel(fence, shader, glm::vec3(0.0f, -1.0f, 0.0f));
 
-    // 6. Trees (-2.0f, -1.0f, -2.0f)
+    // 6. Trees
     drawModel(trees, shader, glm::vec3(-2.0f, -1.0f, -2.0f));
 
     // 7. Big Trees
@@ -369,47 +496,43 @@ void renderAllObjects(gps::Shader shader) {
     drawModel(big_tree2, shader, glm::vec3(-3.0f, -1.0f, -4.0f));
     drawModel(big_tree3, shader, glm::vec3(0.0f, -1.0f, -5.0f));
 
-    // 8. Lantern (-7.0f, -0.4f, -1.0f), Scale 0.5
-    drawModel(lantern, shader, glm::vec3(-7.0f, -0.4f, -1.0f), glm::vec3(0.5f));
+    lanternWorldPos = glm::vec3(-7.0f, -0.4f, -1.0f);
+    drawModel(lantern, shader, lanternWorldPos, glm::vec3(0.5f));
 
-    // 9. Well (5.0f, -1.0f, 5.0f)
+    // 9. Well
     drawModel(well, shader, glm::vec3(5.0f, -1.0f, 5.0f));
 
-    // 10. Casuta (-5.0f, -3.0f, 5.0f)
+    // 10. Casuta
     drawModel(casuta, shader, glm::vec3(-5.0f, -3.0f, 5.0f));
 
-    // 11. Bear (0.0f, -0.05f, -3.0f), Scale 0.5
-    drawModel(bear, shader, glm::vec3(0.0f, -0.05f, -3.0f), glm::vec3(0.5f));
+    // 11. Bear
+    drawModel(bear, shader, glm::vec3(0.0f, -0.2f, -3.0f), glm::vec3(0.5f));
 
-    // 12. Windmill (Complex Animation)
+    // 12. Windmill
     glm::vec3 windmillPos = glm::vec3(20.0f, 20.0f, 100.0f);
-
-    // Base - Scale 0.5
     drawModel(windmillBase, shader, windmillPos, glm::vec3(0.5f));
 
-	drawModel(campfire, shader, glm::vec3(-7.0f, -1.1f, -5.0f));
+    campfireWorldPos = glm::vec3(-7.0f, -1.1f, -5.0f);
+    drawModel(campfire, shader, campfireWorldPos);
 
-    // Blades - Animated
+    // 14. Windmill Blades
     bladesAngle += 1.0f;
     shader.useShaderProgram();
     glm::mat4 modelBlades = glm::mat4(1.0f);
     modelBlades = glm::translate(modelBlades, windmillPos);
-    modelBlades = glm::translate(modelBlades, glm::vec3(0.0f, 4.0f, -2.8f)); // Offset blades
+    modelBlades = glm::translate(modelBlades, glm::vec3(0.0f, 4.0f, -2.8f));
     modelBlades = glm::rotate(modelBlades, glm::radians(bladesAngle), glm::vec3(0.0f, 0.0f, 1.0f));
     modelBlades = glm::scale(modelBlades, glm::vec3(0.5f));
     glUniformMatrix4fv(glGetUniformLocation(shader.shaderProgram, "model"), 1, GL_FALSE, glm::value_ptr(modelBlades));
-    // Recompute normal for blades manually because of complex transforms
     if (glGetUniformLocation(shader.shaderProgram, "normalMatrix") != -1) {
         normalMatrix = glm::mat3(glm::inverseTranspose(view * modelBlades));
         glUniformMatrix3fv(glGetUniformLocation(shader.shaderProgram, "normalMatrix"), 1, GL_FALSE, glm::value_ptr(normalMatrix));
     }
     windmillBlades.Draw(shader);
 }
-
 void renderScene() {
     glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 
-    // --- PASS 1: SHADOW MAPPING ---
     depthMapShader.useShaderProgram();
     glUniformMatrix4fv(glGetUniformLocation(depthMapShader.shaderProgram, "lightSpaceTrMatrix"),
         1, GL_FALSE, glm::value_ptr(computeLightSpaceTrMatrix()));
@@ -418,13 +541,12 @@ void renderScene() {
     glBindFramebuffer(GL_FRAMEBUFFER, shadowMapFBO);
     glClear(GL_DEPTH_BUFFER_BIT);
 
-    glCullFace(GL_FRONT); // Solve Peter Panning
-    renderAllObjects(depthMapShader); // <--- Aici e magia, apelam functia unica
+    glCullFace(GL_FRONT);
+    renderAllObjects(depthMapShader);
     glCullFace(GL_BACK);
 
     glBindFramebuffer(GL_FRAMEBUFFER, 0);
 
-    // --- PASS 2: MAIN SCENE ---
     glViewport(0, 0, myWindow.getWindowDimensions().width, myWindow.getWindowDimensions().height);
     myBasicShader.useShaderProgram();
 
@@ -435,27 +557,36 @@ void renderScene() {
     glBindTexture(GL_TEXTURE_2D, depthMapTexture);
     glUniform1i(glGetUniformLocation(myBasicShader.shaderProgram, "shadowMap"), 3);
 
-    // Update Point Light Position relative to Camera View
-    glm::vec3 lanternPos = glm::vec3(-13.0f, -0.4f, -4.0f);
-    glm::vec3 lightSourcePos = lanternPos + glm::vec3(0.0f, 1.0f, 0.0f);
+    glm::vec3 lightSourcePos = lanternWorldPos + glm::vec3(-6.0f, 0.5f, -1.5f);
     glm::vec3 lightPosEye = glm::vec3(view * glm::vec4(lightSourcePos, 1.0f));
     glUniform3fv(glGetUniformLocation(myBasicShader.shaderProgram, "pointLightPos"), 1, glm::value_ptr(lightPosEye));
 
-    glm::vec3 firePosWorld = glm::vec3(-18.0f, 0.8f, -44.5f);
-    glm::vec3 firePosEye = glm::vec3(view * glm::vec4(firePosWorld, 1.0f));
+    glm::vec3 lanternColor = lanternLightEnabled ? glm::vec3(1.0f, 0.6f, 0.0f) : glm::vec3(0.0f, 0.0f, 0.0f);
+    glUniform3fv(glGetUniformLocation(myBasicShader.shaderProgram, "pointLightColor"), 1, glm::value_ptr(lanternColor));
+
+    glm::vec3 fireSourcePos = campfireWorldPos + glm::vec3(-10.0f, 0.5f, -40.0f); 
+    glm::vec3 firePosEye = glm::vec3(view * glm::vec4(fireSourcePos, 1.0f));
     glUniform3fv(glGetUniformLocation(myBasicShader.shaderProgram, "campfirePos"), 1, glm::value_ptr(firePosEye));
 
-    float time = glfwGetTime();
-    float flicker = 0.8f + (sin(time * 10.0f) * 0.1f) + (cos(time * 23.0f) * 0.1f);
-
-    glm::vec3 fireColor = glm::vec3(1.0f, 0.4f, 0.0f) * flicker * 5.0f;
-
+    glm::vec3 fireColor;
+    if (campfireLightEnabled) {
+        float time = glfwGetTime();
+        float flicker = 0.8f + (sin(time * 10.0f) * 0.1f) + (cos(time * 23.0f) * 0.1f);
+        fireColor = glm::vec3(1.0f, 0.4f, 0.0f) * flicker * 5.0f;
+    }
+    else {
+        fireColor = glm::vec3(0.0f, 0.0f, 0.0f); // Stins
+    }
     glUniform3fv(glGetUniformLocation(myBasicShader.shaderProgram, "campfireColor"), 1, glm::value_ptr(fireColor));
 
     renderAllObjects(myBasicShader);
-    mySkyBox.Draw(skyboxShader, view, projection);
+    if (sunLightEnabled) {
+        mySkyBox.Draw(skyboxShader, view, projection);
+    }
+    else {
+        myNightSkyBox.Draw(skyboxShader, view, projection);
+    }
 }
-
 void cleanup() {
     myWindow.Delete();
 }
@@ -480,9 +611,30 @@ int main(int argc, const char* argv[]) {
     glfwSetInputMode(myWindow.getWindow(), GLFW_CURSOR, GLFW_CURSOR_DISABLED);
     glCheckError();
 
+    initSnowParticles();
+    std::cout << "\n=== CONTROALE ===\n";
+    std::cout << "WASD - Miscare camera\n";
+    std::cout << "Mouse - Rotire camera\n";
+    std::cout << "Q/E - Rotire obiect\n";
+    std::cout << "P - Tour automat\n";
+    std::cout << "F - Fog ON/OFF\n";
+    std::cout << "N - Ninsoare ON/OFF\n";
+    std::cout << "L - Lanterna ON/OFF\n";
+    std::cout << "C - Campfire ON/OFF\n";
+    std::cout << "1/2/3 - Mod randare (Solid/Wireframe/Point)\n";
+    std::cout << "ESC - Iesire\n";
+    std::cout << "==================\n\n";
+    float lastFrame = 0.0f;
+
     while (!glfwWindowShouldClose(myWindow.getWindow())) {
+        float currentFrame = glfwGetTime();
+        float deltaTime = currentFrame - lastFrame;
+        lastFrame = currentFrame;
+
+        updateSnowParticles(deltaTime);
         processMovement();
         renderScene();
+        renderSnow();
         glfwPollEvents();
         glfwSwapBuffers(myWindow.getWindow());
         glCheckError();
