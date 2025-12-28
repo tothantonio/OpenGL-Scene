@@ -69,6 +69,16 @@ Real-time switching between rendering polygons:
  
 ## 📸 Screenshots
 
+![p1](screenshots/p1.png)
+
+![p2](screenshots/p2.png)
+
+![p3](screenshots/p3.png)
+
+![p4](screenshots/p4.png)
+
+
+
 
 ## 📦 Dependencies
 - OpenGL 4.1+ (Core Profile)
@@ -76,3 +86,4 @@ Real-time switching between rendering polygons:
 - GLEW: OpenGL Extension Wrangler.
 - GLM: OpenGL Mathematics library.
 - Stb_image: Texture loading utility.
+
