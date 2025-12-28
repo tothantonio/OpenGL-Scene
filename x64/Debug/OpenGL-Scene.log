@@ -8,4 +8,7 @@ D:\toth\OpenGL-Scene\OpenGL-Scene\main.cpp(227,27): warning C4244: '=': conversi
 D:\toth\OpenGL-Scene\OpenGL-Scene\main.cpp(447,46): warning C4267: 'argument': conversion from 'size_t' to 'GLsizei', possible loss of data
 D:\toth\OpenGL-Scene\OpenGL-Scene\main.cpp(573,20): warning C4244: 'initializing': conversion from 'double' to 'float', possible loss of data
 D:\toth\OpenGL-Scene\OpenGL-Scene\main.cpp(630,28): warning C4244: 'initializing': conversion from 'double' to 'float', possible loss of data
+glew32s.lib(glew.obj) : warning LNK4099: PDB 'vc120.pdb' was not found with 'glew32s.lib(glew.obj)' or at 'D:\toth\OpenGL-Scene\x64\Debug\vc120.pdb'; linking object as if no debug info
+LINK : warning LNK4098: defaultlib 'MSVCRT' conflicts with use of other libs; use /NODEFAULTLIB:library
+LINK : warning LNK4098: defaultlib 'LIBCMT' conflicts with use of other libs; use /NODEFAULTLIB:library
   OpenGL-Scene.vcxproj -> D:\toth\OpenGL-Scene\x64\Debug\OpenGL-Scene.exe
