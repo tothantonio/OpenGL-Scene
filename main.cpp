@@ -22,15 +22,12 @@
 #include <iostream>
 #include <vector>
 
-// --- Window ---
 gps::Window myWindow;
 const unsigned int SHADOW_WIDTH = 4096, SHADOW_HEIGHT = 4096;
 
-// --- Rendering Modes ---
 enum RenderMode { SOLID = 0, WIREFRAME = 1, POINT = 2 };
 RenderMode currentRenderMode = SOLID;
 
-// --- Camera ---
 gps::Camera myCamera(
     glm::vec3(0.0f, 0.0f, 3.0f),
     glm::vec3(0.0f, 0.0f, -10.0f),
@@ -38,7 +35,6 @@ gps::Camera myCamera(
 );
 float cameraSpeed = 0.5f;
 
-// --- Matrices & Shaders ---
 glm::mat4 model;
 glm::mat4 view;
 glm::mat4 projection;
@@ -48,7 +44,6 @@ gps::Shader myBasicShader;
 gps::Shader depthMapShader;
 gps::Shader skyboxShader;
 
-// --- Lighting ---
 glm::vec3 lightDir;
 glm::vec3 lightColor;
 glm::vec3 pointLightPos;
@@ -57,7 +52,6 @@ glm::vec3 pointLightColor;
 GLint modelLoc, viewLoc, projectionLoc, normalMatrixLoc;
 GLint lightDirLoc, lightColorLoc;
 
-// --- Models ---
 gps::Model3D teapot;
 gps::Model3D ground;
 gps::Model3D watchTower;
@@ -74,7 +68,6 @@ gps::Model3D campfire;
 gps::SkyBox mySkyBox;
 gps::SkyBox myNightSkyBox;
 
-// --- Animation & Interaction ---
 GLboolean pressedKeys[1024];
 float angle = 0.0f;
 float bladesAngle = 0.0f;
@@ -83,14 +76,12 @@ float tourAngle = 0.0f;
 bool fogEnabled = false;
 GLint fogEnabledLoc;
 
-// --- Mouse State ---
 GLboolean firstMouse = true;
 GLfloat lastX = 400, lastY = 300;
 GLfloat yaw = -90.0f;
 GLfloat pitch = 0.0f;
 GLfloat sensitivity = 0.1f;
 
-// --- Shadow Mapping ---
 GLuint shadowMapFBO;
 GLuint depthMapTexture;
 
@@ -267,7 +258,6 @@ void processMovement() {
     normalMatrix = glm::mat3(glm::inverseTranspose(view * model));
     glUniformMatrix3fv(normalMatrixLoc, 1, GL_FALSE, glm::value_ptr(normalMatrix));
 
-    // Ground collision
     glm::vec3 currentPosition = myCamera.getPosition();
     if (currentPosition.y < MIN_CAMERA_HEIGHT) {
         myCamera.setPosition(glm::vec3(currentPosition.x, MIN_CAMERA_HEIGHT, currentPosition.z));
@@ -442,7 +432,7 @@ void renderSnow() {
     glEnableVertexAttribArray(0);
     glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, sizeof(glm::vec3), (void*)0);
 
-    glUniform1f(glGetUniformLocation(snowShader.shaderProgram, "pointSize"), 10.0f); // fulgi mai mari
+    glUniform1f(glGetUniformLocation(snowShader.shaderProgram, "pointSize"), 10.0f);
 
     glDrawArrays(GL_POINTS, 0, positions.size());
 
@@ -473,49 +463,29 @@ void initSkybox() {
 
 void renderAllObjects(gps::Shader shader) {
 
-    // 1. Ceainic 
     drawModel(teapot, shader, glm::vec3(-5.0f, -3.0f, 5.0f), glm::vec3(0.25f), angle);
-
-    // 2. Ground
     drawModel(ground, shader, glm::vec3(0.0f, -1.0f, 0.0f));
-
-    // 3. Watch Tower
     drawModel(watchTower, shader, glm::vec3(2.0f, -1.0f, -3.0f));
-
-    // 4. House
     drawModel(house, shader, glm::vec3(-1.0f, -0.8f, -1.0f));
-
-    // 5. Fence
     drawModel(fence, shader, glm::vec3(0.0f, -1.0f, 0.0f));
-
-    // 6. Trees
     drawModel(trees, shader, glm::vec3(-2.0f, -1.0f, -2.0f));
-
-    // 7. Big Trees
     drawModel(big_tree, shader, glm::vec3(3.0f, -1.0f, -4.0f));
     drawModel(big_tree2, shader, glm::vec3(-3.0f, -1.0f, -4.0f));
     drawModel(big_tree3, shader, glm::vec3(0.0f, -1.0f, -5.0f));
 
     lanternWorldPos = glm::vec3(-7.0f, -0.4f, -1.0f);
+
     drawModel(lantern, shader, lanternWorldPos, glm::vec3(0.5f));
-
-    // 9. Well
     drawModel(well, shader, glm::vec3(5.0f, -1.0f, 5.0f));
-
-    // 10. Casuta
     drawModel(casuta, shader, glm::vec3(-5.0f, -3.0f, 5.0f));
-
-    // 11. Bear
     drawModel(bear, shader, glm::vec3(0.0f, -0.2f, -3.0f), glm::vec3(0.5f));
 
-    // 12. Windmill
     glm::vec3 windmillPos = glm::vec3(20.0f, 20.0f, 100.0f);
     drawModel(windmillBase, shader, windmillPos, glm::vec3(0.5f));
 
     campfireWorldPos = glm::vec3(-7.0f, -1.1f, -5.0f);
     drawModel(campfire, shader, campfireWorldPos);
 
-    // 14. Windmill Blades
     bladesAngle += 1.0f;
     shader.useShaderProgram();
     glm::mat4 modelBlades = glm::mat4(1.0f);
@@ -575,7 +545,7 @@ void renderScene() {
         fireColor = glm::vec3(1.0f, 0.4f, 0.0f) * flicker * 5.0f;
     }
     else {
-        fireColor = glm::vec3(0.0f, 0.0f, 0.0f); // Stins
+        fireColor = glm::vec3(0.0f, 0.0f, 0.0f); 
     }
     glUniform3fv(glGetUniformLocation(myBasicShader.shaderProgram, "campfireColor"), 1, glm::value_ptr(fireColor));
 
