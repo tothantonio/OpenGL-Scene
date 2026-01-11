@@ -78,12 +78,13 @@ Real-time switching between rendering polygons:
 ![p4](screenshots/p4.png)
 
 
-
-
 ## 📦 Dependencies
 - OpenGL 4.1+ (Core Profile)
 - GLFW3: Window creation and context management.
 - GLEW: OpenGL Extension Wrangler.
 - GLM: OpenGL Mathematics library.
 - Stb_image: Texture loading utility.
+
+Full documentation [here](opengl.pdf)
+
 
